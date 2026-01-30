@@ -1,6 +1,6 @@
 {
-  "name": "userxjs",
-  "version": "0.0.3",
+  "name": "rxjs-hook",
+  "version": "1.0.0",
   "description": "A lightweight, hook-based bridge to manage RxJS observable subscriptions and state synchronization within React components.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

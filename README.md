@@ -1,4 +1,4 @@
-# userxjs
+# rxjs-hook
 
 Subscribe to RxJS Observables and Subjects inside React components. No tearing, concurrent-safe (uses `useSyncExternalStore` under the hood).
 
@@ -9,9 +9,9 @@ Subscribe to RxJS Observables and Subjects inside React components. No tearing, 
 ## Install
 
 ```bash
-pnpm add userxjs react rxjs
-# npm install userxjs react rxjs
-# yarn add userxjs react rxjs
+pnpm add rxjs-hook react rxjs
+# npm install rxjs-hook react rxjs
+# yarn add rxjs-hook react rxjs
 ```
 
 Peer deps: `react` ^18 | ^19, `rxjs` ^7.
@@ -41,7 +41,7 @@ These hooks subscribe to a stream and return the latest value. Component re-rend
 `BehaviorSubject` always has a current value. Hook returns it.
 
 ```tsx
-import { useBehaviorSubject } from "userxjs";
+import { useBehaviorSubject } from "rxjs-hook";
 import { BehaviorSubject } from "rxjs";
 
 const count$ = new BehaviorSubject(0);
@@ -57,7 +57,7 @@ function Counter() {
 `Subject` has no initial value. Hook returns `undefined` until the first emission, then the latest value.
 
 ```tsx
-import { useSubject } from "userxjs";
+import { useSubject } from "rxjs-hook";
 import { Subject } from "rxjs";
 
 const events$ = new Subject<string>();
@@ -73,7 +73,7 @@ function Log() {
 `ReplaySubject` replays N values to new subscribers. Hook returns the latest replayed value (or `undefined` before any emission).
 
 ```tsx
-import { useReplaySubject } from "userxjs";
+import { useReplaySubject } from "rxjs-hook";
 import { ReplaySubject } from "rxjs";
 
 const state$ = new ReplaySubject<State>(1);
@@ -89,7 +89,7 @@ function App() {
 `AsyncSubject` emits only when it completes, and only the last value (Promise-like). Hook returns that value after `complete()`, otherwise `undefined`.
 
 ```tsx
-import { useAsyncSubject } from "userxjs";
+import { useAsyncSubject } from "rxjs-hook";
 import { AsyncSubject } from "rxjs";
 
 const result$ = new AsyncSubject<Data>();
@@ -106,7 +106,7 @@ function DataView() {
 Any `Observable<T>`. You must pass an `initialValue`; the hook returns it until the first emission, then the latest value.
 
 ```tsx
-import { useObservable } from "userxjs";
+import { useObservable } from "rxjs-hook";
 import { interval, map } from "rxjs";
 
 const ticks$ = interval(1000).pipe(map((n) => n + 1));
@@ -124,7 +124,7 @@ function Timer() {
 Subscribe to an Observable and run `next` / `error` / `complete`. Does **not** drive React state. Use for logging, analytics, or triggering external logic.
 
 ```tsx
-import { useSubscription } from "userxjs";
+import { useSubscription } from "rxjs-hook";
 import { events$ } from "./events";
 
 function Logger() {
@@ -146,7 +146,7 @@ Pass `null` or `undefined` as the first argument to “disable” the subscripti
 Get a **callback** and a **Subject**. Call the callback (e.g. from `onChange`); values go into the Subject. Subscribe or `.pipe()` on it (debounce, map, etc.).
 
 ```tsx
-import { useObservableCallback, useSubscription } from "userxjs";
+import { useObservableCallback, useSubscription } from "rxjs-hook";
 import { debounceTime } from "rxjs";
 
 function Search() {
@@ -175,9 +175,9 @@ return <input value={query} onChange={(e) => onChange(e.target.value)} />;
 Import from subpaths so only the hooks you use are bundled:
 
 ```tsx
-import { useBehaviorSubject } from "userxjs/useBehaviorSubject";
-import { useObservableCallback } from "userxjs/useObservableCallback";
-import { useSubscription } from "userxjs/useSubscription";
+import { useBehaviorSubject } from "rxjs-hook/useBehaviorSubject";
+import { useObservableCallback } from "rxjs-hook/useObservableCallback";
+import { useSubscription } from "rxjs-hook/useSubscription";
 // etc.
 ```
 
