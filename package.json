@@ -1,6 +1,6 @@
 {
-  "name": "use-rxjs",
-  "version": "0.0.1",
+  "name": "userxjs",
+  "version": "0.0.2",
   "description": "A lightweight, hook-based bridge to manage RxJS observable subscriptions and state synchronization within React components.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -15,32 +15,84 @@
       "types": "./dist/useBehaviorSubject.d.ts",
       "import": "./dist/useBehaviorSubject.mjs",
       "require": "./dist/useBehaviorSubject.js"
+    },
+    "./useObservable": {
+      "types": "./dist/useObservable.d.ts",
+      "import": "./dist/useObservable.mjs",
+      "require": "./dist/useObservable.js"
+    },
+    "./useReplaySubject": {
+      "types": "./dist/useReplaySubject.d.ts",
+      "import": "./dist/useReplaySubject.mjs",
+      "require": "./dist/useReplaySubject.js"
+    },
+    "./useSubject": {
+      "types": "./dist/useSubject.d.ts",
+      "import": "./dist/useSubject.mjs",
+      "require": "./dist/useSubject.js"
     }
   },
   "packageManager": "pnpm@9.15.0",
   "sideEffects": false,
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
+    "prepare": "husky",
     "prepublishOnly": "pnpm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
     "rxjs": "^7.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "@testing-library/react": "^14.0.0",
     "@types/react": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "husky": "^9.0.0",
+    "jsdom": "^25.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.0.0",
     "react": "^18.3.0",
+    "react-dom": "^18.3.0",
     "rxjs": "^7.8.0",
     "tsup": "^8.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^2.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/thiennp/useRxjs.git"
   },
-  "keywords": ["react", "rxjs", "hooks", "behavior-subject", "observable"],
+  "keywords": [
+    "react",
+    "rxjs",
+    "hooks",
+    "behavior-subject",
+    "observable"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {
