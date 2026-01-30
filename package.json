@@ -1,6 +1,6 @@
 {
   "name": "userxjs",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A lightweight, hook-based bridge to manage RxJS observable subscriptions and state synchronization within React components.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -30,6 +30,21 @@
       "types": "./dist/useSubject.d.ts",
       "import": "./dist/useSubject.mjs",
       "require": "./dist/useSubject.js"
+    },
+    "./useAsyncSubject": {
+      "types": "./dist/useAsyncSubject.d.ts",
+      "import": "./dist/useAsyncSubject.mjs",
+      "require": "./dist/useAsyncSubject.js"
+    },
+    "./useObservableCallback": {
+      "types": "./dist/useObservableCallback.d.ts",
+      "import": "./dist/useObservableCallback.mjs",
+      "require": "./dist/useObservableCallback.js"
+    },
+    "./useSubscription": {
+      "types": "./dist/useSubscription.d.ts",
+      "import": "./dist/useSubscription.mjs",
+      "require": "./dist/useSubscription.js"
     }
   },
   "packageManager": "pnpm@9.15.0",

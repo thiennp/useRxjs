@@ -1,27 +1,44 @@
-# useRxJS
+# userxjs
 
-A lightweight, hook-based bridge to manage RxJS observable subscriptions and state synchronization within React components.
+Subscribe to RxJS Observables and Subjects inside React components. No tearing, concurrent-safe (uses `useSyncExternalStore` under the hood).
 
-## Installation
+**If you know RxJS and React:** pick the hook that matches your RxJS type; it returns the latest value (or a callback + stream). No magic.
+
+---
+
+## Install
 
 ```bash
-# pnpm
 pnpm add userxjs react rxjs
-
-# npm
-npm install userxjs react rxjs
-
-# yarn
-yarn add userxjs react rxjs
+# npm install userxjs react rxjs
+# yarn add userxjs react rxjs
 ```
 
-**Peer dependencies:** `react` (^18.0.0 or ^19.0.0), `rxjs` (^7.0.0).
+Peer deps: `react` ^18 | ^19, `rxjs` ^7.
 
-## Usage
+---
+
+## Which hook do I use?
+
+| You have…              | Use this hook              | You get…                          |
+|------------------------|----------------------------|-----------------------------------|
+| `BehaviorSubject<T>`   | `useBehaviorSubject`       | `T` (always defined)              |
+| `Subject<T>`           | `useSubject`               | `T` or `undefined`                |
+| `ReplaySubject<T>`     | `useReplaySubject`         | `T` or `undefined`                |
+| `AsyncSubject<T>`      | `useAsyncSubject`          | `T` or `undefined` (after complete)|
+| `Observable<T>`        | `useObservable`            | `T` (you pass `initialValue`)     |
+| Side effects only      | `useSubscription`          | nothing (next/error/complete)    |
+| Turn callbacks → stream | `useObservableCallback`    | `[callback, Subject<T>]`           |
+
+---
+
+## State hooks (subscribe → current value)
+
+These hooks subscribe to a stream and return the latest value. Component re-renders when the stream emits.
 
 ### useBehaviorSubject
 
-Subscribe to an RxJS `BehaviorSubject` and get its current value. Updates re-render the component. Built on React's `useSyncExternalStore` for concurrent-safe behavior and no tearing.
+`BehaviorSubject` always has a current value. Hook returns it.
 
 ```tsx
 import { useBehaviorSubject } from "userxjs";
@@ -31,18 +48,13 @@ const count$ = new BehaviorSubject(0);
 
 function Counter() {
   const count = useBehaviorSubject(count$);
-  return (
-    <div>
-      <span>{count}</span>
-      <button onClick={() => count$.next(count + 1)}>Increment</button>
-    </div>
-  );
+  return <button onClick={() => count$.next(count + 1)}>{count}</button>;
 }
 ```
 
 ### useSubject
 
-Subscribe to an RxJS `Subject`. Returns `undefined` until the first emission, then the latest value.
+`Subject` has no initial value. Hook returns `undefined` until the first emission, then the latest value.
 
 ```tsx
 import { useSubject } from "userxjs";
@@ -50,31 +62,15 @@ import { Subject } from "rxjs";
 
 const events$ = new Subject<string>();
 
-function Logger() {
-  const lastEvent = useSubject(events$);
-  return <div>{lastEvent ?? "—"}</div>;
-}
-```
-
-### useObservable
-
-Subscribe to any RxJS `Observable`. Requires an `initialValue`; returns the latest emitted value once the observable emits.
-
-```tsx
-import { useObservable } from "userxjs";
-import { interval, map } from "rxjs";
-
-const ticks$ = interval(1000).pipe(map((n) => n + 1));
-
-function Timer() {
-  const tick = useObservable(ticks$, 0);
-  return <span>{tick}</span>;
+function Log() {
+  const last = useSubject(events$);
+  return <div>{last ?? "—"}</div>;
 }
 ```
 
 ### useReplaySubject
 
-Subscribe to an RxJS `ReplaySubject`. Returns `undefined` until the first emission, then the latest replayed value.
+`ReplaySubject` replays N values to new subscribers. Hook returns the latest replayed value (or `undefined` before any emission).
 
 ```tsx
 import { useReplaySubject } from "userxjs";
@@ -88,24 +84,116 @@ function App() {
 }
 ```
 
-**Tree-shaking:** To bundle only the hooks you use, use subpaths:
+### useAsyncSubject
+
+`AsyncSubject` emits only when it completes, and only the last value (Promise-like). Hook returns that value after `complete()`, otherwise `undefined`.
+
+```tsx
+import { useAsyncSubject } from "userxjs";
+import { AsyncSubject } from "rxjs";
+
+const result$ = new AsyncSubject<Data>();
+fetch(url).then((r) => r.json()).then((d) => { result$.next(d); result$.complete(); });
+
+function DataView() {
+  const data = useAsyncSubject(result$);
+  return data ? <pre>{JSON.stringify(data)}</pre> : <span>Loading…</span>;
+}
+```
+
+### useObservable
+
+Any `Observable<T>`. You must pass an `initialValue`; the hook returns it until the first emission, then the latest value.
+
+```tsx
+import { useObservable } from "userxjs";
+import { interval, map } from "rxjs";
+
+const ticks$ = interval(1000).pipe(map((n) => n + 1));
+
+function Timer() {
+  const tick = useObservable(ticks$, 0);
+  return <span>{tick}</span>;
+}
+```
+
+---
+
+## Side effects: useSubscription
+
+Subscribe to an Observable and run `next` / `error` / `complete`. Does **not** drive React state. Use for logging, analytics, or triggering external logic.
+
+```tsx
+import { useSubscription } from "userxjs";
+import { events$ } from "./events";
+
+function Logger() {
+  useSubscription(events$, {
+    next: (e) => console.log(e),
+    error: (err) => console.error(err),
+    complete: () => console.log("done"),
+  });
+  return null;
+}
+```
+
+Pass `null` or `undefined` as the first argument to “disable” the subscription.
+
+---
+
+## Events → stream: useObservableCallback
+
+Get a **callback** and a **Subject**. Call the callback (e.g. from `onChange`); values go into the Subject. Subscribe or `.pipe()` on it (debounce, map, etc.).
+
+```tsx
+import { useObservableCallback, useSubscription } from "userxjs";
+import { debounceTime } from "rxjs";
+
+function Search() {
+  const [onChange, query$] = useObservableCallback<string>();
+
+  useSubscription(query$.pipe(debounceTime(300)), {
+    next: (q) => console.log("search:", q),
+  });
+
+  return <input onChange={(e) => onChange(e.target.value)} />;
+}
+```
+
+Or combine with `useObservable` if you want the latest value in state:
+
+```tsx
+const [onChange, query$] = useObservableCallback<string>();
+const query = useObservable(query$.pipe(debounceTime(300)), "");
+return <input value={query} onChange={(e) => onChange(e.target.value)} />;
+```
+
+---
+
+## Tree-shaking
+
+Import from subpaths so only the hooks you use are bundled:
 
 ```tsx
 import { useBehaviorSubject } from "userxjs/useBehaviorSubject";
-import { useSubject } from "userxjs/useSubject";
-import { useObservable } from "userxjs/useObservable";
-import { useReplaySubject } from "userxjs/useReplaySubject";
+import { useObservableCallback } from "userxjs/useObservableCallback";
+import { useSubscription } from "userxjs/useSubscription";
+// etc.
 ```
+
+---
 
 ## Publishing
 
-The GitHub Actions workflow **Publish to npm** runs when you push a version tag (e.g. `v0.0.1`, `v0.0.2`). It runs lint, test, build, then publishes to npm.
+Push a version tag to run the **Publish to npm** workflow (lint → test → build → publish):
 
-1. Bump version and commit: `pnpm version patch` (or minor/major), then commit the version bump.
-2. Push the new tag: `git push origin v0.0.2` (replace with your tag).
-3. The workflow runs and publishes to npm.
+```bash
+pnpm version patch && git push && git push origin v0.0.3
+```
 
-**Required:** Add an npm classic token as the **NPM_TOKEN** secret in the repo (Settings → Secrets and variables → Actions). The token needs “Automation” or “Publish” scope.
+Repo secret **NPM_TOKEN** (npm classic token with Publish scope) is required.
+
+---
 
 ## License
 
